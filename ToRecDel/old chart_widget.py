@@ -1,0 +1,278 @@
+# chart_widget.py
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import Qt, QPointF, QRectF
+from PyQt5.QtGui import QPainter, QFont, QColor, QPen
+import math
+
+# ရာသီအမည်များ (Burmese Zodiac Names)
+ZODIAC_SIGNS_MM = [
+    "မိဿ", "ပြိဿ", "မေထုန်", "ကရကဋ်", "သိဟ်", "ကန်",
+    "တူ", "ဗြိစ္ဆာ", "ဓနု", "မကာရ", "ကုမ်", "မိန်"
+]
+
+
+class BurmeseChartWidget(QWidget):
+    """
+    Center Frame တွင် ပုံဖော်ပြရန် Widget (400x400)
+    """
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        
+        # မူလတန်ဖိုးများ
+        self.planet_data = [] 
+        self.show_degrees = True  # Default: show degrees
+        self.chart_type = "ရာသီ"  # Default chart type
+        
+        # === Size ကို 400x400 သတ်မှတ်ခြင်း ===
+        self.setFixedSize(400, 400)
+        
+        # Grid အတွက် Cell Size
+        self.cell_size = 60 
+        
+        # Center Point (400 / 2)
+        self.center_x = 200
+        self.center_y = 200
+        
+        # === FONT SIZES (ဒီနေရာမှာ ပြောင်းပါ) ===
+        # ဂြိုဟ်သင်္ကေတ အရွယ်အစား (သေးချင်/ကြီးချင် ဒီကိန်းကို ပြောင်းပါ)
+        SYMBOL_SIZE = 12
+        # ဒီဂရီ/မိနစ် အရွယ်အစား
+        DEGREE_SIZE = 6
+        # အလယ်ဗဟို စာသား အရွယ်အစား
+        TITLE_SIZE = 12
+        
+        # Font များအတွက် mapping
+        self._font_sizes = {
+            "ရာသီ": {"symbol": SYMBOL_SIZE, "degree": DEGREE_SIZE, "title": TITLE_SIZE},
+            "ဘာဝ": {"symbol": SYMBOL_SIZE, "degree": 0, "title": TITLE_SIZE},
+            "နဝင်း": {"symbol": SYMBOL_SIZE, "degree": 0, "title": TITLE_SIZE}
+        }
+        
+        # Default fonts (ဒီနေရာက ဖောင့်တွေ သတ်မှတ်တယ်)
+        self._symbol_font = QFont("Pyidaungsu", SYMBOL_SIZE)
+        self._degree_font = QFont("Pyidaungsu", DEGREE_SIZE)
+        self._title_font = QFont("Pyidaungsu", TITLE_SIZE, QFont.Bold)
+        
+        # Chart type mapping for center display
+        self.center_text_map = {
+            "ရာသီစက်": "ရာသီ",
+            "ရာသီ": "ရာသီ",
+            "Rasi": "ရာသီ",
+            "Rasi (D1)": "ရာသီ",
+            "Bhava": "ဘာဝ",
+            "Bhava Chalit": "ဘာဝ",
+            "Navamsa": "နဝင်း",
+            "Navamsa (D9)": "နဝင်း",
+            "ဘာဝစက်": "ဘာဝ",
+            "နဝင်းစက်": "နဝင်း"
+        }
+        
+        self.chart_title = ""
+    
+    
+
+    def set_planet_data(self, planet_data, show_degrees=True, chart_type="ရာသီစက်"):
+        """
+        planet_data: list of dicts with keys: id, symbol, sign, deg, min, retro
+        show_degrees: False for Navamsa (symbols only)
+        chart_type: ရာသီစက်, ဘာဝစက်, နဝင်းစက်
+        """
+        self.planet_data = planet_data
+        self.show_degrees = show_degrees
+        
+        if chart_type:
+            self.chart_type = chart_type
+            
+            # Determine center display text
+            center_key = None
+            for key in self.center_text_map:
+                if key in str(chart_type):
+                    center_key = key
+                    break
+            
+            if center_key:
+                # Update fonts based on chart type
+                chart_key = self.center_text_map[center_key]
+                
+                if chart_key in self._font_sizes:
+                    sizes = self._font_sizes[chart_key]
+                    
+                    # ဂြိုဟ်သင်္ကေတ ဖောင့်ဆိုဒ်
+                    self._symbol_font = QFont("Pyidaungsu", sizes["symbol"])
+                    
+                    # ဒီဂရီ/မိနစ် ဖောင့်ဆိုဒ်
+                    if sizes["degree"] > 0:
+                        self._degree_font = QFont("Pyidaungsu", sizes["degree"])
+                    
+                    # အလယ်ဗဟို စာသား ဖောင့်ဆိုဒ်
+                    self._title_font = QFont("Pyidaungsu", sizes["title"], QFont.Bold)
+    
+            if chart_type :
+                self.chart_title = chart_type
+            self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Background
+        painter.fillRect(self.rect(), QColor(255, 255, 255))
+
+        #Draw title
+        if self.chart_title:
+            painter.setFont(self._title_font)
+            painter.setPen(Qt.black)
+            painter.drawText(QRectF(0, 0, self.width(), 30), Qt.AlignCenter, self.chart_title)
+        
+              
+        # 1️⃣ Grid
+        self.draw_grid(painter)
+
+        # 2️⃣ Chart title in center
+        painter.setFont(self._title_font)
+        painter.setPen(Qt.black)
+        
+        # Get center text based on chart_type
+        center_text = " "  # default
+        
+        if self.chart_type:
+            if "ရာသီ" in self.chart_type or "Rasi" in self.chart_type:
+                center_text = "ရာသီ"
+            elif "ဘာဝ" in self.chart_type or "Bhava" in self.chart_type:
+                center_text = "ဘာဝ"
+            elif "နဝင်း" in self.chart_type or "Navamsa" in self.chart_type:
+                center_text = "နဝင်း"
+        
+       
+       
+        # Draw centered text
+        painter.drawText(QRectF(160, 184, 80, 32), Qt.AlignCenter, center_text)
+
+        # 3️⃣ Planet symbols / degree strings
+        self.draw_planets(painter)
+
+    def draw_grid(self, painter):
+        pen = QPen(Qt.black, 2)
+        painter.setPen(pen)
+        
+        c_x, c_y, cell = self.center_x, self.center_y, self.cell_size
+        
+        # Vertical Lines
+        painter.drawLine(int(c_x - cell), int(c_y - 5*cell), 
+                        int(c_x - cell), int(c_y + 5*cell))
+        painter.drawLine(int(c_x + cell), int(c_y - 5*cell), 
+                        int(c_x + cell), int(c_y + 5*cell))
+        
+        # Horizontal Lines
+        painter.drawLine(int(c_x - 5*cell), int(c_y - cell), 
+                        int(c_x + 5*cell), int(c_y - cell))
+        painter.drawLine(int(c_x - 5*cell), int(c_y + cell), 
+                        int(c_x + 5*cell), int(c_y + cell))
+        
+        # Diagonal Lines (Diamond Shape)
+        painter.drawLine(int(c_x - 5*cell), int(c_y - 5*cell), 
+                        int(c_x - cell), int(c_y - cell))
+        painter.drawLine(int(c_x + 5*cell), int(c_y - 5*cell), 
+                        int(c_x + cell), int(c_y - cell))
+        painter.drawLine(int(c_x - cell), int(c_y + cell), 
+                        int(c_x - 5*cell), int(c_y + 5*cell))
+        painter.drawLine(int(c_x + cell), int(c_y + cell), 
+                        int(c_x + 5*cell), int(c_y + 5*cell))
+
+   
+    def get_zodiac_positions(self):
+        """ရာသီအမည်များ ထားရမည့်နေရာများ"""
+
+        # === 1. Rasi (D1) အတွက် မူရင်း ကိန်းဂဏာန်းများ ===
+        base_coordsRasi = [
+            ("မိဿ", 270, 20), ("ပြိဿ", 155, 20), ("မေထုန်", 85, 80),
+            ("ကရကဋ်", 85, 195), ("သိဟ်", 85, 345), ("ကန်", 165, 415),
+            ("တူ", 270, 345), ("ဗြိစ္ဆာ", 405, 405), ("ဓနု", 485, 345),
+            ("မကာရ", 420, 195), ("ကုမ်", 500, 80), ("မိန်", 405, 20)
+        ]
+
+        # === 2. အခြား Charts (Bhava, Navamsa, D60, etc.) အတွက် ကိန်းဂဏာန်းများ ===
+        # (လက်ရှိမှာ Rasi နှင့် တူညီနေပါသည်၊ နောက်ပိုင်းမှာ ပြောင်းလဲနိုင်ပါသည်)
+        base_coordsOther = [
+            ("မိဿ", 300, 25), ("ပြိဿ", 165, 25), ("မေထုန်", 95, 80),
+            ("ကရကဋ်", 95, 195), ("သိဟ်", 100, 350), ("ကန်", 165, 415),
+            ("တူ", 300, 350), ("ဗြိစ္ဆာ", 405, 405), ("ဓနု", 485, 350),
+            ("မကာရ", 420, 195), ("ကုမ်", 505, 85), ("မိန်", 415, 25)
+        ]
+
+        # === Chart Type အလိုက် ကိန်းဂဏာန်းများ ရွေးချယ်ခြင်း ===
+        # Default အနေနဲ့ base_coordsOther ကို ယူသုံးမည်
+        selected_coords = base_coordsOther
+
+        # ရာသီ (Rasi) ဇာတာဖြစ်မဖြစ် စစ်ဆေးခြင်း
+        if self.chart_type:
+            # "ရာသီ" သို့မဟုတ် "Rasi" ဆိုတဲ့ စာသားပါရင် Rasi Coordinates ကို သုံးမည်
+            if "Rasi" in self.chart_type or "ရာသီ" in self.chart_type:
+                selected_coords = base_coordsRasi
+
+        # === တွက်ချက်မှု Logic (မပြောင်းရပါ) ===
+        pos_dict = {}
+        scale = 0.8
+        
+        for name, bx, by in selected_coords:
+            x = (bx - 250) * scale + self.center_x
+            y = (by - 250) * scale + self.center_y
+            pos_dict[name] = QPointF(x, y)
+            
+        return pos_dict
+
+    def draw_planets(self, painter):
+        if not self.planet_data:
+            return
+
+        # Group by zodiac sign
+        planets_by_sign = {}
+        for p in self.planet_data:
+            sign_name = ZODIAC_SIGNS_MM[p['sign']]
+            if sign_name not in planets_by_sign:
+                planets_by_sign[sign_name] = []
+            planets_by_sign[sign_name].append(p)
+
+        line_height = 25
+        zodiac_positions = self.get_zodiac_positions()
+
+        for sign_name, planets in planets_by_sign.items():
+            if sign_name not in zodiac_positions:
+                continue
+            
+            base_pos = zodiac_positions[sign_name]
+
+            for i, p in enumerate(planets):
+                # Symbol with symbol font
+                painter.setFont(self._symbol_font)
+                symbol_txt = f"{p['symbol']}"
+                
+                # Degree/minute with degree font (if applicable)
+                deg_min_txt = ""
+                if self.show_degrees and 'deg' in p and 'min' in p:
+                    painter.setFont(self._degree_font)
+                    deg_min_txt = f" {p['deg']}°{p['min']}'"
+                
+                # Retrograde indicator
+                retro_txt = " R" if p.get('retro', False) else ""
+                
+                # Combine text
+                if deg_min_txt:
+                    # Draw symbol
+                    painter.setFont(self._symbol_font)
+                    painter.drawText(QPointF(base_pos.x() - 60, base_pos.y() + i * line_height), symbol_txt)
+                    
+                    # Draw degree
+                    text_width = painter.fontMetrics().width(symbol_txt)
+                    painter.setFont(self._degree_font)
+                    painter.drawText(QPointF(base_pos.x() - 60 + text_width, base_pos.y() + i * line_height), deg_min_txt + retro_txt)
+                else:
+                    # Just symbol (for Navamsa)
+                    painter.setFont(self._symbol_font)
+                    painter.drawText(QPointF(base_pos.x() - 60, base_pos.y() + i * line_height), symbol_txt + retro_txt)
+
+# ----------------------------------------------------------------------
+# End of BurmeseChartWidget
+# ----------------------------------------------------------------------

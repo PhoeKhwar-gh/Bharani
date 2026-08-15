@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>exit (1).png</file>
+    <file>exit (2).png</file>
+    <file>icons8-cloud-file-100.png</file>
+    <file>icons8-code-file-100.png</file>
+    <file>icons8-database-administrator-100.png</file>
+    <file>icons8-data-sheet-100.png</file>
+    <file>icons8-document-100.png</file>
+    <file>icons8-graph-report-100.png</file>
+    <file>icons8-insert-table-100.png</file>
+    <file>icons8-micro-sd-100.png</file>
+    <file>icons8-send-file-100.png</file>
+    <file>icons8-spreadsheet-100.png</file>
+    <file>NewFile.png</file>
+    <file>ChartDirary.png</file>
+    <file>ChartExist.png</file>
+    <file>DefaultPrinter.png</file>
+    <file>Ephemeris.png</file>
+    <file>ExtraData.png</file>
+    <file>Folder.png</file>
+    <file>logo.png</file>
+    <file>Open.png</file>
+    <file>Print.png</file>
+    <file>PrinttoPdf.png</file>
+    <file>PrintWallsheet.png</file>
+    <file>Save.png</file>
+    <file>save-file.png</file>
+  </qresource>
+</RCC>

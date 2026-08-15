@@ -1,0 +1,2 @@
+
+        if degrees < 15:
