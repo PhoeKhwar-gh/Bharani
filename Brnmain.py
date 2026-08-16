@@ -480,14 +480,6 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
             self._place_editor_open = False
 
 
-    def on_place_saved(self, location_data):
-        """Handle data saved from place editor"""
-        print(f"📍 Location saved: {location_data}")
-
-        town = location_data.get("TownName", "").strip()
-        if town:
-            self._pending_saved_town = town
-    
     def restore_settings(self):
         # App ဖွင့်တဲ့အခါ Layout အခြေအနေကို ပြန်ယူခြင်း
         settings = QtCore.QSettings("MyCompany", "BharaniApp")
@@ -2152,18 +2144,6 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                     return i + 1
                     
         return 12  # နယ်စပ်ကျနေပါက ၁၂ လဂ်ဟု သတ်မှတ်မည်
-
-    def update_sidebar_text(self, planet_data, name, birth_dt, lat, lon, jd):
-        """Update sidebar text with chart details"""
-        text = f"<h3>{name}</h3>"
-        text += f"<p>မွေးနေ့: {birth_dt.strftime('%Y-%m-%d %H:%M')}</p>"
-        text += f"<p>နေရာ: {self.cboAllCities.currentText()} ({lat:.4f}, {lon:.4f})</p>"
-        text += "<h4>ဂြိုဟ်တည်ရာများ:</h4>"
-        text += "<ul>"
-        for p in planet_data:
-            text += f"<li>{p['symbol']} {p['name']}: {p['sign_name']} {p['deg']}° {p['min']}' {p.get('sec',0)}\"</li>"
-        text += "</ul>"
-        self.sidebar_text.setHtml(text)
 
     def calculate_division_chart(self, rasi_results, chart_name):
         """စံနှုန်းမီ Varga (Divisional Chart) တွက်ချက်ခြင်း (D2 မှ D60 အထိ)"""
