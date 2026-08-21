@@ -16,6 +16,7 @@ from yuga_calculator import YugaCalculator
 from ashtakavarga import AshtakavargaCalculator
 from ashtakavarga_widget import AshtakavargaMatrixWidget
 
+from print_to_pdf import BharaniPdfExporter
 
 
 # PyQt5 imports
@@ -266,6 +267,12 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         # === Kawzar Widget Setup ===
         self.setup_kawzar_widget()
         
+        # ✅ အောက်ပါ Code ကို ထည့်ပေးလိုက်ပါ
+        if hasattr(self, 'tabWidget'):
+            self.tabWidget.setCurrentIndex(0)  # 0 သည် ပထမဆုံး Tab (Tab_1) ဖြစ်သည်
+
+        
+        
         # ===== Fortune chart ======
         # === Fortune Chart Setup in Remark Dock ===
         if FORTUNE_CHART_AVAILABLE:
@@ -292,6 +299,11 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         if hasattr(self, 'tabWidget'):
             self.tabWidget.setCurrentIndex(0)  # 0 သည် ပထမဆုံး Tab (Tab_1) ဖြစ်သည်
         
+        
+        # PDF Exporter ကို Initialize လုပ်ခြင်း
+        self.pdf_exporter = BharaniPdfExporter(self) 
+        
+                
         #pdf export munu create
         self._export_pdf_menu()
     # ==================== INITIALIZATION METHODS ====================
@@ -1183,26 +1195,74 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         # Second Row (D2, D3, D4)
         second_row_layout = QHBoxLayout()
         second_row_layout.setSpacing(15)
-        
+
         self.d2_chart_widget = BurmeseChartWidget()
         self.d2_chart_widget.setFixedSize(400, 400)
         self.d2_chart_widget.set_planet_data([], True, "D2 - ဟောရာ")
         second_row_layout.addWidget(self.d2_chart_widget)
         self.chart_widgets['D2'] = self.d2_chart_widget
-        
+
         self.d3_chart_widget = BurmeseChartWidget()
         self.d3_chart_widget.setFixedSize(400, 400)
-        self.d3_chart_widget.set_planet_data([], True, "D3 - တြိကန")
+        self.d3_chart_widget.set_planet_data([], True, "D3 - တြင်း")
         second_row_layout.addWidget(self.d3_chart_widget)
         self.chart_widgets['D3'] = self.d3_chart_widget
-        
+
         self.d4_chart_widget = BurmeseChartWidget()
         self.d4_chart_widget.setFixedSize(400, 400)
-        self.d4_chart_widget.set_planet_data([], True, "D4 - စတုသံသ")
+        self.d4_chart_widget.set_planet_data([], True, "D4 - စတုတ္ထံသင်း")
         second_row_layout.addWidget(self.d4_chart_widget)
         self.chart_widgets['D4'] = self.d4_chart_widget
-        
+
         div_layout.addLayout(second_row_layout)
+
+        # Third Row (D7, D10, D12)
+        third_row_layout = QHBoxLayout()
+        third_row_layout.setSpacing(15)
+
+        self.d7_chart_widget = BurmeseChartWidget()
+        self.d7_chart_widget.setFixedSize(400, 400)
+        self.d7_chart_widget.set_planet_data([], True, "D7 - သတ္တံသင်း")
+        third_row_layout.addWidget(self.d7_chart_widget)
+        self.chart_widgets['D7'] = self.d7_chart_widget
+
+        self.d10_chart_widget = BurmeseChartWidget()
+        self.d10_chart_widget.setFixedSize(400, 400)
+        self.d10_chart_widget.set_planet_data([], True, "D10 - ဒသံသင်း")
+        third_row_layout.addWidget(self.d10_chart_widget)
+        self.chart_widgets['D10'] = self.d10_chart_widget
+
+        self.d12_chart_widget = BurmeseChartWidget()
+        self.d12_chart_widget.setFixedSize(400, 400)
+        self.d12_chart_widget.set_planet_data([], True, "D12 - ဒွါဒသံသင်း")
+        third_row_layout.addWidget(self.d12_chart_widget)
+        self.chart_widgets['D12'] = self.d12_chart_widget
+
+        div_layout.addLayout(third_row_layout)
+
+        # Fourth Row (D20, D30, D60)
+        fourth_row_layout = QHBoxLayout()
+        fourth_row_layout.setSpacing(15)
+
+        self.d20_chart_widget = BurmeseChartWidget()
+        self.d20_chart_widget.setFixedSize(400, 400)
+        self.d20_chart_widget.set_planet_data([], True, "D20 - ဝိံသင်း")
+        fourth_row_layout.addWidget(self.d20_chart_widget)
+        self.chart_widgets['D20'] = self.d20_chart_widget
+
+        self.d30_chart_widget = BurmeseChartWidget()
+        self.d30_chart_widget.setFixedSize(400, 400)
+        self.d30_chart_widget.set_planet_data([], True, "D30 - တိံသင်း")
+        fourth_row_layout.addWidget(self.d30_chart_widget)
+        self.chart_widgets['D30'] = self.d30_chart_widget
+
+        self.d60_chart_widget = BurmeseChartWidget()
+        self.d60_chart_widget.setFixedSize(400, 400)
+        self.d60_chart_widget.set_planet_data([], True, "D60 - သဋ္ဌိံသင်း")
+        fourth_row_layout.addWidget(self.d60_chart_widget)
+        self.chart_widgets['D60'] = self.d60_chart_widget
+
+        div_layout.addLayout(fourth_row_layout)
         self.charts_layout.addWidget(self.division_container)
         
         # Add stretch at the bottom
@@ -1375,8 +1435,10 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
             self.actionExportPDF.triggered.disconnect()
         except Exception:
             pass
+        
+        self.actionExportPDF.triggered.connect(self.pdf_exporter.export_charts_to_pdf)
 
-        self.actionExportPDF.triggered.connect(self.export_charts_to_pdf)
+
 
         menu_bar = self.menuBar()
         if menu_bar is None:
@@ -1424,143 +1486,7 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         else:
             target_menu.addAction(self.actionExportPDF)
     
-    def export_charts_to_pdf(self):
-        """တွက်ချက်ပြီး ဇာတာပုံများကို PDF အဖြစ် သိမ်းဆည်းခြင်း
-        A4, Full Page, Margin 0.35 inch around
-        """
-
-        if not getattr(self, "current_planet_data", None):
-            QMessageBox.warning(self, "သတိပေးချက်", "ကျေးဇူးပြု၍ ဦးစွာ ဇာတာကို တွက်ချက်ပေးပါ။")
-            return
-
-        default_name = self.txtName.text().strip() or "Zarta"
-
-        settings = QtCore.QSettings("MyCompany", "BharaniApp")
-        last_dir = settings.value("lastPdfExportDir", QtCore.QDir.homePath())
-        default_path = os.path.join(last_dir, f"{default_name}.pdf")
-
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "PDF ဖိုင် သိမ်းရန် နေရာ ရွေးပါ",
-            default_path,
-            "PDF Files (*.pdf)"
-        )
-
-        if not file_path:
-            self.statusbar.showMessage("PDF သိမ်းဆည်းခြင်း မလုပ်ပါ")
-            return
-
-        if not file_path.lower().endswith(".pdf"):
-            file_path += ".pdf"
-
-        settings.setValue("lastPdfExportDir", os.path.dirname(file_path))
-
-        painter = QPainter()
-        painter_started = False
-        error_message = None
-
-        try:
-            printer = QPrinter(QPrinter.HighResolution)
-            printer.setOutputFormat(QPrinter.PdfFormat)
-            printer.setOutputFileName(file_path)
-
-            # A4 size
-            printer.setPageSize(QPrinter.A4)
-
-            # Resolution
-            printer.setResolution(150)
-
-            # ✅ Full Page coordinate system
-            printer.setFullPage(True)
-
-            widget = self.charts_container
-            widget.ensurePolished()
-            widget.adjustSize()
-
-            pixmap = widget.grab()
-
-            if pixmap.isNull():
-                raise Exception("ဇာတာပုံ widget ကို ဖမ်းယူ၍ မရပါ။")
-
-            if not painter.begin(printer):
-                raise Exception("PDF writer ကို စတင်၍ မရပါ။")
-
-            painter_started = True
-
-            # ✅ Margin 0.35 inch around
-            dpi = printer.resolution()
-            margin_inch = 0.35
-            margin_px = int(margin_inch * dpi)
-
-            paper_rect = printer.paperRect(QPrinter.DevicePixel)
-
-            page_x = margin_px
-            page_y = margin_px
-            page_w = int(paper_rect.width()) - 2 * margin_px
-            page_h = int(paper_rect.height()) - 2 * margin_px
-
-            if page_w <= 0 or page_h <= 0:
-                raise Exception("PDF စာမျက်နှာ အရွယ်အစား မမှန်ပါ။")
-
-            # Chart container ကို PDF page width နဲ့ ကိုက်ညီအောင် scale လုပ်ခြင်း
-            scaled = pixmap.scaledToWidth(page_w, Qt.SmoothTransformation)
-
-            if scaled.isNull() or scaled.height() <= 0:
-                raise Exception("PDF အတွက် ပုံဖမ်းယူမှု မအောင်မြင်ပါ။")
-
-            y = 0
-            first_page = True
-
-            while y < scaled.height():
-                if not first_page:
-                    printer.newPage()
-
-                first_page = False
-
-                # စာမျက်နှာ နောက်ခံ အဖြူရောင်
-                painter.fillRect(paper_rect, QColor(Qt.white))
-
-                segment_h = int(min(page_h, scaled.height() - y))
-
-                # ✅ Left margin 0.35 inch
-                x = page_x + max(0, (page_w - scaled.width()) // 2)
-
-                # ✅ Top margin 0.35 inch
-                painter.drawPixmap(
-                    x,
-                    page_y,
-                    scaled,
-                    0,
-                    y,
-                    scaled.width(),
-                    segment_h
-                )
-
-                y += segment_h
-
-        except Exception as e:
-            error_message = str(e)
-            import traceback
-            traceback.print_exc()
-
-        finally:
-            # ✅ PDF writer ကို လုံခြုံစွာ ပိတ်ခြင်း
-            if painter_started:
-                painter.end()
-
-        if error_message:
-            QMessageBox.critical(
-                self,
-                "အမှား",
-                f"PDF သိမ်းဆည်းရာတွင် အမှားရှိနေပါသည်:\n{error_message}"
-            )
-        else:
-            self.statusbar.showMessage(f"✅ PDF သိမ်းပြီး: {file_path}")
-            QMessageBox.information(
-                self,
-                "အောင်မြင်ပါသည်",
-                f"PDF ဖိုင်ကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။\n{file_path}"
-            )
+    
 
     # ==================== KAWZAR HANDLERS ====================
 
@@ -2198,18 +2124,127 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         div_deg = degrees % amsa
         return div_sign_num, div_deg
 
+    def calculate_chaturthamsha_d4(self, sign_num, degrees):
+        """Calculate D4 chart"""
+        amsa = 7.5
+        part = int(degrees / amsa)
+        if sign_num in MOVABLE_SIGNS:
+            div_sign_num = self.compute_nth_sign(sign_num, part + 1)
+        elif sign_num in FIXED_SIGNS:
+            div_sign_num = self.compute_nth_sign(sign_num, part + 5)
+        else:
+            div_sign_num = self.compute_nth_sign(sign_num, part + 9)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_saptamsa_d7(self, sign_num, degrees):
+        """Calculate D7 chart"""
+        amsa = 30.0 / 7
+        part = int(degrees / amsa)
+        if sign_num % 2 == 1:
+            div_sign_num = self.compute_nth_sign(sign_num, part + 1)
+        else:
+            div_sign_num = self.compute_nth_sign(sign_num, part + 7)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_dasamsa_d10(self, sign_num, degrees):
+        """Calculate D10 chart"""
+        amsa = 3.0
+        part = int(degrees / amsa)
+        dasamsa_table = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            [4, 5, 6, 7, 8, 9, 10, 11, 12, 1],
+            [5, 6, 7, 8, 9, 10, 11, 12, 1, 2],
+            [6, 7, 8, 9, 10, 11, 12, 1, 2, 3],
+            [7, 8, 9, 10, 11, 12, 1, 2, 3, 4],
+            [8, 9, 10, 11, 12, 1, 2, 3, 4, 5],
+            [9, 10, 11, 12, 1, 2, 3, 4, 5, 6],
+            [10, 11, 12, 1, 2, 3, 4, 5, 6, 7],
+            [11, 12, 1, 2, 3, 4, 5, 6, 7, 8],
+            [12, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ]
+        div_sign_num = dasamsa_table[sign_num - 1][part]
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_dwadasamsa_d12(self, sign_num, degrees):
+        """Calculate D12 chart"""
+        amsa = 2.5
+        part = int(degrees / amsa)
+        div_sign_num = self.compute_nth_sign(sign_num, part + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_vimsamsa_d20(self, sign_num, degrees):
+        """Calculate D20 chart"""
+        amsa = 1.5
+        part = int(degrees / amsa)
+        if sign_num in MOVABLE_SIGNS:
+            base = 1
+        elif sign_num in FIXED_SIGNS:
+            base = 9
+        else:
+            base = 5
+        div_sign_num = self.compute_nth_sign(base, part + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_trimsamsa_d30(self, sign_num, degrees):
+        """Calculate D30 chart"""
+        if sign_num % 2 == 0:
+            if degrees < 5:
+                div_sign_num = 2
+            elif degrees < 12:
+                div_sign_num = 6
+            elif degrees < 19:
+                div_sign_num = 10
+            elif degrees < 24:
+                div_sign_num = 12
+            else:
+                div_sign_num = 8
+        else:
+            if degrees < 5:
+                div_sign_num = 1
+            elif degrees < 10:
+                div_sign_num = 11
+            elif degrees < 18:
+                div_sign_num = 9
+            elif degrees < 25:
+                div_sign_num = 3
+            else:
+                div_sign_num = 7
+        return div_sign_num, 0.0
+
+    def calculate_shashtiamsa_d60(self, sign_num, degrees):
+        """Calculate D60 chart"""
+        amsa = 0.5
+        part = int(degrees / amsa) + 1
+        div_sign_num = self.compute_nth_sign(sign_num, ((part - 1) % 12) + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
     def update_division_charts(self, rasi_results):
-        """ဝဂ္ဂဇာတာများ (D2, D3, D4) ကို စံနှုန်းမီ ပြန်လည်တွက်ချက်ပြီး ဇာတာပုံများ အပ်ဒိတ်လုပ်ခြင်း"""
-        d2_data = self.calculate_division_chart(rasi_results, "D2")
-        d3_data = self.calculate_division_chart(rasi_results, "D3")
-        d4_data = self.calculate_division_chart(rasi_results, "D4")
-        
-        if hasattr(self, 'd2_chart_widget'):
-            self.d2_chart_widget.set_planet_data(d2_data, False, "D2 - ဟောရာ")
-        if hasattr(self, 'd3_chart_widget'):
-            self.d3_chart_widget.set_planet_data(d3_data, False, "D3 - တြိကဏ")
-        if hasattr(self, 'd4_chart_widget'):
-            self.d4_chart_widget.set_planet_data(d4_data, False, "D4 - စတုသံသ")
+        """ဝဂ္ဂဇာတာမျိုးစုံ (D2, D3, D4, D7, D10, D12, D20, D30, D60) ကို အပ်ဒိတ်လုပ်မယ်"""
+        division_map = {
+            'D2': ('ဟောရာ', self.calculate_division_chart(rasi_results, 'D2')),
+            'D3': ('တြင်း', self.calculate_division_chart(rasi_results, 'D3')),
+            'D4': ('စတုတ္ထံသင်း', self.calculate_division_chart(rasi_results, 'D4')),
+            'D7': ('သတ္တံသင်း', self.calculate_division_chart(rasi_results, 'D7')),
+            'D10': ('ဒသံသင်း', self.calculate_division_chart(rasi_results, 'D10')),
+            'D12': ('ဒွါဒသင်း', self.calculate_division_chart(rasi_results, 'D12')),
+            'D20': ('ဝိံသသင်', self.calculate_division_chart(rasi_results, 'D20')),
+            'D30': ('တြိမသမသင်', self.calculate_division_chart(rasi_results, 'D30')),
+            'D60': ('သဿတိမသင်', self.calculate_division_chart(rasi_results, 'D60')),
+        }
+
+        for key, (label, data) in division_map.items():
+            widget_name = f"{key.lower()}_chart_widget"
+            widget = getattr(self, widget_name, None)
+            if widget is not None:
+                widget.set_planet_data(data, False, f"{key} - {label}")
 
     def toggle_division_charts(self, state):
         print("toggle_division_charts called, state = ", state)
@@ -2237,6 +2272,21 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         self.rasi_chart_widget.set_planet_data([], True, "D1 - ရာသီ")
         self.bhava_chart_widget.set_planet_data([], False, "Bhava - ဘာဝ")
         self.navamsa_chart_widget.set_planet_data([], False, "D9 - နဝင်း")
+        for key in ['D2', 'D3', 'D4', 'D7', 'D10', 'D12', 'D20', 'D30', 'D60']:
+            widget = getattr(self, f"{key.lower()}_chart_widget", None)
+            if widget is not None:
+                label = {
+                    'D2': 'D2 - ဟောရာ',
+                    'D3': 'D3 - တြင်း',
+                    'D4': 'D4 - စတ္ထံသင်း',
+                    'D7': 'D7 - သတ္တမသင်',
+                    'D10': 'D10 - ဒသမသင်',
+                    'D12': 'D12 - ဒွါဒသမသင်',
+                    'D20': 'D20 - ဝိမသမသင်',
+                    'D30': 'D30 - တြိမသမသင်',
+                    'D60': 'D60 - သဿတိမသင်',
+                }.get(key, key)
+                widget.set_planet_data([], False, label)
         self.sidebar_text.clear()
         self.current_planet_data = None
         self.statusbar.showMessage("ဇာတာအသစ်အတွက် ပြင်ဆင်ပြီးပါပြီ")
