@@ -284,5 +284,18 @@
     "lon": "95.187648",
     "ayanamsa": "Lahiri",
     "house_system": "Vehlow Equal"
+  },
+  "ပန်ဆိုင်းလူ": {
+    "name": "ပန်ဆိုင်းလူ",
+    "date": "1981-07-26",
+    "time": "00:15:16",
+    "timezone": "UTC+06:30",
+    "country": "မြန်မာ",
+    "state": "ရှမ်း (တောင်)",
+    "city": "နန်းပန်",
+    "lat": "20.45493",
+    "lon": "96.90596",
+    "ayanamsa": "Lahiri",
+    "house_system": "Vehlow Equal"
   }
 }
