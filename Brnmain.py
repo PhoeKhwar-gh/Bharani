@@ -11,6 +11,7 @@ from typing import List
 from narayana_dasha import NarayanaDashaCalculator
 from narayana_dasha_widget import NarayanaDashaWidget
 from yuga_calculator import YugaCalculator
+from myanmar_calendar import ceMmDateTime, ceMmTranslate
 
 
 from ashtakavarga import AshtakavargaCalculator
@@ -659,6 +660,37 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         
 
     # ယုဂ်တွက်ပုံ chrt %%%%%%%%%%%%%%%%%%%%%%%%%+_+_+_+_+__
+
+    @staticmethod
+    def format_myanmar_date(gregorian_date):
+        """Format a Gregorian date as a Myanmar calendar date."""
+        mm_date = ceMmDateTime.from_gregorian(
+            gregorian_date.year,
+            gregorian_date.month,
+            gregorian_date.day,
+            tz=6.5,
+        )
+        translator = ceMmTranslate()
+        my_year = translator.T(str(mm_date.my), 1, 0)
+        month_names = [
+            "တန်ခူး", "ကဆုန်", "နယုန်", "ဝါဆို", "ဝါခေါင်", "တော်သလင်း",
+            "သီတင်းကျွတ်", "တန်ဆောင်မုန်း", "နတ်တော်", "ပြာသို", "တပို့တွဲ", "တပေါင်း",
+        ]
+        if mm_date.mm == 4 and mm_date.myt > 0:
+            month_name = "ဒုတိယ ဝါဆို"
+        elif mm_date.mm == 13:
+            month_name = "နှောင်းတန်ခူး"
+        else:
+            month_name = month_names[mm_date.mm - 1]
+
+        moon_names = ["လဆန်း", "လပြည့်", "လဆုတ်", "လကွယ်"]
+        moon_phase = moon_names[mm_date.mp]
+        if mm_date.mp in (1, 3):
+            moon_day = ""
+        else:
+            moon_day = f" {translator.T(str(mm_date.mf), 1, 0)} ရက်"
+        weekdays = ["စနေ", "တနင်္ဂနွေ", "တနင်္လာ", "အင်္ဂါ", "ဗုဒ္ဓဟူး", "ကြာသပတေး", "သောကြာ"]
+        return f"{my_year} ခုနှစ်၊ {month_name}{moon_phase}{moon_day}၊ {weekdays[mm_date.w]}နေ့"
     
     def update_sidebar_text(self, planet_data, name, birth_dt, lat, lon, jd): 
         """Update sidebar text with chart details + Yuga Info"""
@@ -666,6 +698,7 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         # 1. အခြေခံ အချက်အလက်များ
         text = f"<h3>{name}</h3>"
         text += f"<p>📅 မွေးနေ့: {birth_dt.strftime('%Y-%m-%d %H:%M')}</p>"
+        text += f"<p>မြန်မာရက်စွဲ: {self.format_myanmar_date(birth_dt)}</p>"
         text += f"<p>📍 နေရာ: {self.cboAllCities.currentText()} ({lat:.4f}, {lon:.4f})</p>"
         
         # 2. ယုဂ် (Yuga) အချက်အလက် ထည့်သွင်းခြင်း 🌟
@@ -1498,6 +1531,14 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
             page_y = margin_px
             page_w = int(paper_rect.width()) - 2 * margin_px
             page_h = int(paper_rect.height()) - 2 * margin_px
+            birth_date = self.cboDate.date()
+            birth_time = self.cboTime.time()
+            birth_dt = datetime(
+                birth_date.year(), birth_date.month(), birth_date.day(),
+                birth_time.hour(), birth_time.minute(), birth_time.second(),
+            )
+            myanmar_date = self.format_myanmar_date(birth_dt)
+            header_height = int(0.45 * dpi)
 
             if page_w <= 0 or page_h <= 0:
                 raise Exception("PDF စာမျက်နှာ အရွယ်အစား မမှန်ပါ။")
@@ -1520,7 +1561,21 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                 # စာမျက်နှာ နောက်ခံ အဖြူရောင်
                 painter.fillRect(paper_rect, QColor(Qt.white))
 
-                segment_h = int(min(page_h, scaled.height() - y))
+                current_header_height = header_height if first_page is False and y == 0 else 0
+                if y == 0:
+                    current_header_height = header_height
+                    painter.setPen(QColor(Qt.black))
+                    painter.setFont(QFont("Pyidaungsu", 11, QFont.Bold))
+                    painter.drawText(
+                        page_x,
+                        page_y + int(0.18 * dpi),
+                        page_w,
+                        int(0.2 * dpi),
+                        Qt.AlignCenter,
+                        myanmar_date,
+                    )
+
+                segment_h = int(min(page_h - current_header_height, scaled.height() - y))
 
                 # ✅ Left margin 0.35 inch
                 x = page_x + max(0, (page_w - scaled.width()) // 2)
@@ -1528,7 +1583,7 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                 # ✅ Top margin 0.35 inch
                 painter.drawPixmap(
                     x,
-                    page_y,
+                    page_y + current_header_height,
                     scaled,
                     0,
                     y,
