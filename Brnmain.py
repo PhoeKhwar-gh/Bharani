@@ -1236,6 +1236,54 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         self.chart_widgets['D4'] = self.d4_chart_widget
         
         div_layout.addLayout(second_row_layout)
+
+        # Third Row (D5, D7, D10)
+        third_row_layout = QHBoxLayout()
+        third_row_layout.setSpacing(15)
+
+        self.d5_chart_widget = BurmeseChartWidget()
+        self.d5_chart_widget.setFixedSize(400, 400)
+        self.d5_chart_widget.set_planet_data([], True, "D5 - ပဉ္စမ")
+        third_row_layout.addWidget(self.d5_chart_widget)
+        self.chart_widgets['D5'] = self.d5_chart_widget
+
+        self.d7_chart_widget = BurmeseChartWidget()
+        self.d7_chart_widget.setFixedSize(400, 400)
+        self.d7_chart_widget.set_planet_data([], True, "D7 - သတ္တမ")
+        third_row_layout.addWidget(self.d7_chart_widget)
+        self.chart_widgets['D7'] = self.d7_chart_widget
+
+        self.d10_chart_widget = BurmeseChartWidget()
+        self.d10_chart_widget.setFixedSize(400, 400)
+        self.d10_chart_widget.set_planet_data([], True, "D10 - ဒသမ")
+        third_row_layout.addWidget(self.d10_chart_widget)
+        self.chart_widgets['D10'] = self.d10_chart_widget
+
+        div_layout.addLayout(third_row_layout)
+
+        # Fourth Row (D20, D30, D60)
+        fourth_row_layout = QHBoxLayout()
+        fourth_row_layout.setSpacing(15)
+
+        self.d20_chart_widget = BurmeseChartWidget()
+        self.d20_chart_widget.setFixedSize(400, 400)
+        self.d20_chart_widget.set_planet_data([], True, "D20 - ဝိမသမ")
+        fourth_row_layout.addWidget(self.d20_chart_widget)
+        self.chart_widgets['D20'] = self.d20_chart_widget
+
+        self.d30_chart_widget = BurmeseChartWidget()
+        self.d30_chart_widget.setFixedSize(400, 400)
+        self.d30_chart_widget.set_planet_data([], True, "D30 - တြိမသမ")
+        fourth_row_layout.addWidget(self.d30_chart_widget)
+        self.chart_widgets['D30'] = self.d30_chart_widget
+
+        self.d60_chart_widget = BurmeseChartWidget()
+        self.d60_chart_widget.setFixedSize(400, 400)
+        self.d60_chart_widget.set_planet_data([], True, "D60 - သဠာမ")
+        fourth_row_layout.addWidget(self.d60_chart_widget)
+        self.chart_widgets['D60'] = self.d60_chart_widget
+
+        div_layout.addLayout(fourth_row_layout)
         self.charts_layout.addWidget(self.division_container)
         
         # Add stretch at the bottom
@@ -2254,17 +2302,24 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         return div_sign_num, div_deg
 
     def update_division_charts(self, rasi_results):
-        """ဝဂ္ဂဇာတာများ (D2, D3, D4) ကို စံနှုန်းမီ ပြန်လည်တွက်ချက်ပြီး ဇာတာပုံများ အပ်ဒိတ်လုပ်ခြင်း"""
-        d2_data = self.calculate_division_chart(rasi_results, "D2")
-        d3_data = self.calculate_division_chart(rasi_results, "D3")
-        d4_data = self.calculate_division_chart(rasi_results, "D4")
-        
-        if hasattr(self, 'd2_chart_widget'):
-            self.d2_chart_widget.set_planet_data(d2_data, False, "D2 - ဟောရာ")
-        if hasattr(self, 'd3_chart_widget'):
-            self.d3_chart_widget.set_planet_data(d3_data, False, "D3 - တြိကဏ")
-        if hasattr(self, 'd4_chart_widget'):
-            self.d4_chart_widget.set_planet_data(d4_data, False, "D4 - စတုသံသ")
+        """D2 မှ D60 အထိ ဝဂ္ဂဇာတာများကို ပြန်လည်တွက်ချက်ပြီး အပ်ဒိတ်လုပ်ခြင်း"""
+        division_specs = {
+            "D2": ("D2 - ဟောရာ", self.d2_chart_widget),
+            "D3": ("D3 - တြိင်း", self.d3_chart_widget),
+            "D4": ("D4 - စတုသံသ", self.d4_chart_widget),
+            "D5": ("D5 - ပဉ္စမ", self.d5_chart_widget),
+            "D7": ("D7 - သတ္တံသင်း", self.d7_chart_widget),
+            "D10": ("D10 - ဒသံသင်း", self.d10_chart_widget),
+            "D20": ("D20 - ဝိမသမ", self.d20_chart_widget),
+            "D30": ("D30 - တြိမသမ", self.d30_chart_widget),
+            "D60": ("D60 - သဠာမ", self.d60_chart_widget),
+        }
+
+        for division_name, (label, widget) in division_specs.items():
+            if widget is None:
+                continue
+            division_data = self.calculate_division_chart(rasi_results, division_name)
+            widget.set_planet_data(division_data, False, label)
 
     def toggle_division_charts(self, state):
         print("toggle_division_charts called, state = ", state)
