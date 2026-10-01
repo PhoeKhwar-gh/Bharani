@@ -1219,19 +1219,19 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         
         self.d2_chart_widget = BurmeseChartWidget()
         self.d2_chart_widget.setFixedSize(400, 400)
-        self.d2_chart_widget.set_planet_data([], True, "D2 - ဟောရာ")
+        self.d2_chart_widget.set_planet_data([], False, "D2 - ဟောရာ")
         second_row_layout.addWidget(self.d2_chart_widget)
         self.chart_widgets['D2'] = self.d2_chart_widget
         
         self.d3_chart_widget = BurmeseChartWidget()
         self.d3_chart_widget.setFixedSize(400, 400)
-        self.d3_chart_widget.set_planet_data([], True, "D3 - တြိကန")
+        self.d3_chart_widget.set_planet_data([], False, "D3 - တြိကန")
         second_row_layout.addWidget(self.d3_chart_widget)
         self.chart_widgets['D3'] = self.d3_chart_widget
         
         self.d4_chart_widget = BurmeseChartWidget()
         self.d4_chart_widget.setFixedSize(400, 400)
-        self.d4_chart_widget.set_planet_data([], True, "D4 - စတုသံသ")
+        self.d4_chart_widget.set_planet_data([], False, "D4 - စတုသံသ")
         second_row_layout.addWidget(self.d4_chart_widget)
         self.chart_widgets['D4'] = self.d4_chart_widget
         
@@ -1243,19 +1243,19 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
 
         self.d5_chart_widget = BurmeseChartWidget()
         self.d5_chart_widget.setFixedSize(400, 400)
-        self.d5_chart_widget.set_planet_data([], True, "D5 - ပဉ္စမ")
+        self.d5_chart_widget.set_planet_data([], False, "D5 - ပဉ္စမ")
         third_row_layout.addWidget(self.d5_chart_widget)
         self.chart_widgets['D5'] = self.d5_chart_widget
 
         self.d7_chart_widget = BurmeseChartWidget()
         self.d7_chart_widget.setFixedSize(400, 400)
-        self.d7_chart_widget.set_planet_data([], True, "D7 - သတ္တမ")
+        self.d7_chart_widget.set_planet_data([], False, "D7 - သတ္တမ")
         third_row_layout.addWidget(self.d7_chart_widget)
         self.chart_widgets['D7'] = self.d7_chart_widget
 
         self.d10_chart_widget = BurmeseChartWidget()
         self.d10_chart_widget.setFixedSize(400, 400)
-        self.d10_chart_widget.set_planet_data([], True, "D10 - ဒသမ")
+        self.d10_chart_widget.set_planet_data([], False, "D10 - ဒသမ")
         third_row_layout.addWidget(self.d10_chart_widget)
         self.chart_widgets['D10'] = self.d10_chart_widget
 
@@ -1267,19 +1267,19 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
 
         self.d20_chart_widget = BurmeseChartWidget()
         self.d20_chart_widget.setFixedSize(400, 400)
-        self.d20_chart_widget.set_planet_data([], True, "D20 - ဝိမသမ")
+        self.d20_chart_widget.set_planet_data([], False, "D20 - ဝိမသမ")
         fourth_row_layout.addWidget(self.d20_chart_widget)
         self.chart_widgets['D20'] = self.d20_chart_widget
 
         self.d30_chart_widget = BurmeseChartWidget()
         self.d30_chart_widget.setFixedSize(400, 400)
-        self.d30_chart_widget.set_planet_data([], True, "D30 - တြိမသမ")
+        self.d30_chart_widget.set_planet_data([], False, "D30 - တြိမသမ")
         fourth_row_layout.addWidget(self.d30_chart_widget)
         self.chart_widgets['D30'] = self.d30_chart_widget
 
         self.d60_chart_widget = BurmeseChartWidget()
         self.d60_chart_widget.setFixedSize(400, 400)
-        self.d60_chart_widget.set_planet_data([], True, "D60 - သဠာမ")
+        self.d60_chart_widget.set_planet_data([], False, "D60 - သဠာမ")
         fourth_row_layout.addWidget(self.d60_chart_widget)
         self.chart_widgets['D60'] = self.d60_chart_widget
 
@@ -1317,7 +1317,7 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         old_layout.addWidget(self.sidebar_text)
 
     def on_all_cities_changed(self, index):
-        """When a city is selected from the all-cities combo, update lat/lon fields."""
+        """Sync the birth-place controls when a city is selected."""
         if index >= 0:
             data = self.cboAllCities.itemData(index)
             if data and len(data) >= 3:
@@ -1325,12 +1325,23 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                 self.txtLat.setText(str(lat))
                 self.txtLon.setText(str(lon))
                 
-                # Set Country combo if exists
-                if hasattr(self, 'cboCountry'):
-                    country_index = self.cboCountry.findText(country)
-                    if country_index >= 0:
-                        self.cboCountry.setCurrentIndex(country_index)
-                        self.on_country_changed(country)
+                country_index = self.cboCountry.findText(country)
+                if country_index >= 0:
+                    self.cboCountry.setCurrentIndex(country_index)
+                    self.on_country_changed(country)
+
+                    if len(data) >= 4:
+                        state = data[3]
+                        state_index = self.cboState.findText(state)
+                        if state_index >= 0:
+                            self.cboState.setCurrentIndex(state_index)
+                            self.on_state_changed(state)
+
+                            city_index = self.cboCity.findText(
+                                self.cboAllCities.itemText(index)
+                            )
+                            if city_index >= 0:
+                                self.cboCity.setCurrentIndex(city_index)
 
     
         
@@ -2092,8 +2103,10 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                     self.bhava_chart_widget.update()
                     
             # Navamsa (D9) - for now using simple rule (3°20' per amsa)
-            navamsa_data = self.calculate_division_chart(planet_data, "D9")
-            self.navamsa_chart_widget.set_planet_data(navamsa_data, True, "D9 - နဝင်း")
+            navamsa_data = self.calculate_division_chart(
+                planet_data, "D9", include_outer_planets=True
+            )
+            self.navamsa_chart_widget.set_planet_data(navamsa_data, False, "D9 - နဝင်း")
             
             # Update division charts if needed
             if self.chkDivision.isChecked():
@@ -2248,38 +2261,68 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                     
         return 12  # နယ်စပ်ကျနေပါက ၁၂ လဂ်ဟု သတ်မှတ်မည်
 
-    def calculate_division_chart(self, rasi_results, chart_name):
-        """စံနှုန်းမီ Varga (Divisional Chart) တွက်ချက်ခြင်း (D2 မှ D60 အထိ)"""
+    def calculate_division_chart(self, rasi_results, chart_name, include_outer_planets=True):
+        """စံနှုန်းမီ Varga (Divisional Chart) တွက်ချက်ခြင်း (D2 မှ D60 အထိ)
+
+        Generic longitude * division_number သုံးသည့်နည်းသည်
+        traditional Vedic varga rules နှင့် မညီပါ။
+        D2/Hora သည် Sun/Moon အိမ်နှစ်လုံး (Leo/Cancer) အတွင်းသာ ဂြိုဟ်များထည့်ရန်
+        ရည်ရွယ်၍၊ ကျန် varga များအတွက်လည်း sign-specific table rules ကို သုံးရသည်။
+        """
         division_results = []
-        
-        # Chart name မှ Division Number ထုတ်ယူခြင်း (ဥပမာ "D9" -> 9)
-        try:
-            div_num = int(chart_name.replace("D", "").strip())
-        except ValueError:
-            div_num = 1  # Fallback to D1
+
+        chart_functions = {
+            "D2": self.calculate_hora_d2,
+            "D3": self.calculate_drekkana_d3,
+            "D4": self.calculate_chaturthamsa_d4,
+            "D5": self.calculate_panchamsa_d5,
+            "D7": self.calculate_saptamsa_d7,
+            "D9": self.calculate_navamsa_d9,
+            "D10": self.calculate_dasamsa_d10,
+            "D12": self.calculate_dwadasamsa_d12,
+            "D20": self.calculate_vimsamsa_d20,
+            "D30": self.calculate_trimsamsa_d30,
+            "D60": self.calculate_shashtiamsa_d60,
+        }
+
+        if chart_name not in chart_functions:
+            print(f"Warning: Unknown division chart {chart_name}")
+            return rasi_results
+
+        calc_func = chart_functions[chart_name]
+        outer_planet_ids = {swe.URANUS, swe.NEPTUNE, swe.PLUTO}
 
         for p in rasi_results:
-            p_long = p.get('longitude', 0.0)
-            
-            # ✅ Vedic Astrology ၏ တရားဝင် စံနှုန်း ပုံသေနည်း
-            div_total_lon = (p_long * div_num) % 360.0
-            
-            div_sign_0based = int(div_total_lon / 30)
-            div_deg = div_total_lon % 30
-            div_min = int((div_deg * 60) % 60)
-            
+            if not include_outer_planets and (
+                p.get('id') in outer_planet_ids
+                or p.get('symbol') in {'U', 'N', 'P'}
+                or p.get('name') in {'Uranus', 'Neptune', 'Pluto'}
+            ):
+                continue
+
+            sign_num = int(p.get('sign', 0)) + 1
+            degrees = float(p.get('deg', 0)) + (float(p.get('min', 0)) / 60.0)
+
+            div_sign_num, div_deg = calc_func(sign_num, degrees)
+            div_sign_0based = div_sign_num - 1
+            div_total_lon = div_sign_0based * 30 + div_deg
+
             new_p = p.copy()
             new_p['longitude'] = div_total_lon
             new_p['sign'] = div_sign_0based
             new_p['deg'] = int(div_deg)
-            new_p['min'] = div_min
+            new_p['min'] = int((div_deg * 60) % 60)
             new_p['sign_name'] = ZODIAC_SIGNS_EN[div_sign_0based]
             division_results.append(new_p)
-            
+
         return division_results
 
     def calculate_hora_d2(self, sign_num, degrees):
-        """Calculate D2 chart"""
+        """D2 - Hora chart.
+
+        Vedic traditional rule: odd signs use Sun / Moon half-sign placement,
+        and the sign set is only Leo-Cancer halves, not a generalized multiplication.
+        """
         is_odd = sign_num in ODD_SIGNS
         if degrees < 15:
             div_sign_num = 5 if is_odd else 4
@@ -2289,15 +2332,161 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         return div_sign_num, div_deg
 
     def calculate_drekkana_d3(self, sign_num, degrees):
-        """Calculate D3 chart"""
+        """D3 - Drekkana (တြိကန) ဇာတာ တွက်ချက်ခြင်း
+        ရာသီတစ်ခု (၃၀°) ကို ၁၀° စီ ၃ ပိုင်း ပိုင်းခြားသည်။
+        
+        Parashara စည်းမျဉ်း -
+        Movable (၁,၄,၇,၁၀) - ၁ပိုင်း=မိမိရာသီ၊ ၂ပိုင်း=၅ခုမြောက်၊ ၃ပိုင်း=၉ခုမြောက်
+        Fixed   (၂,၅,၈,၁၁) - ၁ပိုင်း=မိမိရာသီ၊ ၂ပိုင်း=၉ခုမြောက်၊ ၃ပိုင်း=၅ခုမြောက်
+        Dual    (၃,၆,၉,၁၂) - ၁ပိုင်း=မိမိရာသီ၊ ၂ပိုင်း=၅ခုမြောက်၊ ၃ပိုင်း=၉ခုမြောက်
+        """
         amsa = 10.0
+        part = int(degrees / amsa)  # 0, 1, 2
+
+        # ရာသီအမျိုးအစားအလိုက် offset sequence ကို သတ်မှတ်ခြင်း
+        if sign_num in MOVABLE_SIGNS:
+            offsets = [1, 5, 9]   # 1st, 5th, 9th
+        elif sign_num in FIXED_SIGNS:
+            offsets = [1, 9, 5]   # 1st, 9th, 5th
+        else:  # DUAL_SIGNS
+            offsets = [1, 5, 9]   # 1st, 5th, 9th
+
+        div_sign_num = self.compute_nth_sign(sign_num, offsets[part])
+        # ၁၀° အတွင်းရှိ ဒီဂရီကို ၃၀° ရာသီအဖြစ် ချဲ့ထွင်ခြင်း (10° → 30°)
+        div_deg = (degrees % amsa) * 3.0       
+        return div_sign_num, div_deg
+
+    def calculate_chaturthamsa_d4(self, sign_num, degrees):
+        """D4 - Chaturthamsha chart"""
+        amsa = 7.5
         part = int(degrees / amsa)
         if sign_num in MOVABLE_SIGNS:
-            div_sign_num = self.compute_nth_sign(sign_num, part + 1)
+            base = sign_num
         elif sign_num in FIXED_SIGNS:
-            div_sign_num = self.compute_nth_sign(sign_num, part + 5)
+            base = sign_num + 4
         else:
-            div_sign_num = self.compute_nth_sign(sign_num, part + 9)
+            base = sign_num + 8
+        div_sign_num = self.compute_nth_sign(base, part + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_panchamsa_d5(self, sign_num, degrees):
+        """D5 - Panchamsa chart"""
+        amsa = 6.0
+        part = int(degrees / amsa)
+        if sign_num in MOVABLE_SIGNS:
+            base = sign_num
+        elif sign_num in FIXED_SIGNS:
+            base = sign_num + 4
+        else:
+            base = sign_num + 8
+        div_sign_num = self.compute_nth_sign(base, part + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_saptamsa_d7(self, sign_num, degrees):
+        """D7 - Saptamsa calculation"""
+        amsa = 30.0 / 7
+        compartment = int(degrees / amsa)
+        if sign_num % 2 == 1:
+            div_sign_num = self.compute_nth_sign(sign_num, compartment + 1)
+        else:
+            div_sign_num = self.compute_nth_sign(sign_num, compartment + 7)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_navamsa_d9(self, sign_num, degrees):
+        """D9 - Navamsa calculation"""
+        amsa = 3 + 20 / 60.0
+        compartment = int(degrees / amsa)
+        if sign_num in MOVABLE_SIGNS:
+            base_start = sign_num
+        elif sign_num in FIXED_SIGNS:
+            base_start = self.compute_nth_sign(sign_num, 9)
+        else:
+            base_start = self.compute_nth_sign(sign_num, 5)
+        div_sign_num = self.compute_nth_sign(base_start, compartment + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_dasamsa_d10(self, sign_num, degrees):
+        """D10 - Dasamsa calculation"""
+        amsa = 3.0
+        part = int(degrees / amsa)
+
+        dasamsa_table = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            [4, 5, 6, 7, 8, 9, 10, 11, 12, 1],
+            [5, 6, 7, 8, 9, 10, 11, 12, 1, 2],
+            [6, 7, 8, 9, 10, 11, 12, 1, 2, 3],
+            [7, 8, 9, 10, 11, 12, 1, 2, 3, 4],
+            [8, 9, 10, 11, 12, 1, 2, 3, 4, 5],
+            [9, 10, 11, 12, 1, 2, 3, 4, 5, 6],
+            [10, 11, 12, 1, 2, 3, 4, 5, 6, 7],
+            [11, 12, 1, 2, 3, 4, 5, 6, 7, 8],
+            [12, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ]
+
+        div_sign_num = dasamsa_table[sign_num - 1][part]
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_dwadasamsa_d12(self, sign_num, degrees):
+        """D12 - Dwadasamsa calculation"""
+        amsa = 2.5
+        compartment = int(degrees / amsa)
+        div_sign_num = self.compute_nth_sign(sign_num, compartment + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_vimsamsa_d20(self, sign_num, degrees):
+        """D20 - Vimsamsa calculation"""
+        amsa = 1.5
+        compartment = int(degrees / amsa)
+        if sign_num in MOVABLE_SIGNS:
+            base = 1
+        elif sign_num in FIXED_SIGNS:
+            base = 9
+        else:
+            base = 5
+        div_sign_num = self.compute_nth_sign(base, compartment + 1)
+        div_deg = degrees % amsa
+        return div_sign_num, div_deg
+
+    def calculate_trimsamsa_d30(self, sign_num, degrees):
+        """D30 - Trimsamsa calculation"""
+        if sign_num % 2 == 0:
+            if degrees < 5:
+                div_sign_num = 2
+            elif degrees < 12:
+                div_sign_num = 6
+            elif degrees < 19:
+                div_sign_num = 10
+            elif degrees < 24:
+                div_sign_num = 12
+            else:
+                div_sign_num = 8
+        else:
+            if degrees < 5:
+                div_sign_num = 1
+            elif degrees < 10:
+                div_sign_num = 11
+            elif degrees < 18:
+                div_sign_num = 9
+            elif degrees < 25:
+                div_sign_num = 3
+            else:
+                div_sign_num = 7
+        return div_sign_num, 0.0
+
+    def calculate_shashtiamsa_d60(self, sign_num, degrees):
+        """D60 - Shashtiamsa calculation"""
+        amsa = 0.5
+        part_1based = int(degrees / amsa) + 1
+        compartment = ((part_1based - 1) % 12) + 1
+        div_sign_num = self.compute_nth_sign(sign_num, compartment)
         div_deg = degrees % amsa
         return div_sign_num, div_deg
 
@@ -2318,7 +2507,9 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
         for division_name, (label, widget) in division_specs.items():
             if widget is None:
                 continue
-            division_data = self.calculate_division_chart(rasi_results, division_name)
+            division_data = self.calculate_division_chart(
+                rasi_results, division_name, include_outer_planets=False
+            )
             widget.set_planet_data(division_data, False, label)
 
     def toggle_division_charts(self, state):
@@ -2521,34 +2712,69 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                         if idx >= 0:
                             self.cboTimezone.setCurrentIndex(idx)
                     
-                    # Restore location combos if possible
+                    # Prefer coordinates: older files may have saved the default
+                    # country/state/city even when another city was selected.
                     country = data.get("country", "")
-                    if country:
-                        idx = self.cboCountry.findText(country)
-                        if idx >= 0:
-                            self.cboCountry.setCurrentIndex(idx)
-                            self.on_country_changed(country)
-                    
                     state = data.get("state", "")
-                    if state and self.cboState.count() > 0:
-                        idx = self.cboState.findText(state)
-                        if idx >= 0:
-                            self.cboState.setCurrentIndex(idx)
-                            self.on_state_changed(state)
-                    
                     city = data.get("city", "")
-                    if city and self.cboCity.count() > 0:
-                        idx = self.cboCity.findText(city)
-                        if idx >= 0:
-                            self.cboCity.setCurrentIndex(idx)
-                    
-                    # Latitude/Longitude
                     lat = data.get("lat", "")
                     lon = data.get("lon", "")
-                    if lat:
-                        self.txtLat.setText(lat)
-                    if lon:
-                        self.txtLon.setText(lon)
+                    location_index = -1
+
+                    if lat and lon:
+                        try:
+                            saved_lat = float(lat)
+                            saved_lon = float(lon)
+                            for i in range(self.cboAllCities.count()):
+                                location = self.cboAllCities.itemData(i)
+                                if not location or len(location) < 4:
+                                    continue
+                                if (
+                                    abs(float(location[0]) - saved_lat) < 1e-6
+                                    and abs(float(location[1]) - saved_lon) < 1e-6
+                                ):
+                                    location_index = i
+                                    break
+                        except (TypeError, ValueError):
+                            location_index = -1
+
+                    if location_index < 0 and city:
+                        for i in range(self.cboAllCities.count()):
+                            location = self.cboAllCities.itemData(i)
+                            if (
+                                self.cboAllCities.itemText(i) == city
+                                and location
+                                and len(location) >= 4
+                                and location[2] == country
+                                and location[3] == state
+                            ):
+                                location_index = i
+                                break
+
+                    if location_index >= 0:
+                        self.cboAllCities.setCurrentIndex(location_index)
+                    else:
+                        if country:
+                            idx = self.cboCountry.findText(country)
+                            if idx >= 0:
+                                self.cboCountry.setCurrentIndex(idx)
+                                self.on_country_changed(country)
+
+                        if state:
+                            idx = self.cboState.findText(state)
+                            if idx >= 0:
+                                self.cboState.setCurrentIndex(idx)
+                                self.on_state_changed(state)
+
+                        if city:
+                            idx = self.cboCity.findText(city)
+                            if idx >= 0:
+                                self.cboCity.setCurrentIndex(idx)
+
+                        if lat:
+                            self.txtLat.setText(str(lat))
+                        if lon:
+                            self.txtLon.setText(str(lon))
                     
                     # Ayanamsa
                     aya = data.get("ayanamsa", "")
@@ -2564,12 +2790,6 @@ class BharaniApp(QMainWindow, Ui_MainWindow):
                         if idx >= 0:
                             self.cboHouseSys.setCurrentIndex(idx)
                     
-                    # Set all-cities combo if city found
-                    if city:
-                        idx_all = self.cboAllCities.findText(city)
-                        if idx_all >= 0:
-                            self.cboAllCities.setCurrentIndex(idx_all)
-
                     dialog.accept()
                     # Recalculate chart
                     self.calculate_chart()
